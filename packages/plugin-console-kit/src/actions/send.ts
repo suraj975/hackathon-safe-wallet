@@ -6,8 +6,65 @@ import {
     HandlerCallback,
     elizaLogger,
     Handler,
+    composeContext,
+    ModelClass,
+    generateObject,
+    Content,
 } from "@elizaos/core";
 import { ConsoleKitService } from "../services/console";
+import { z } from "zod";
+import { isAddress } from "viem";
+
+const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+
+Example response:
+\`\`\`json
+{
+    "accountAddress": "<TOKEN_ADDRESS>",
+    "receiverAddress": "<TOKEN_ADDRESS>",
+    "transferAmount": "1000",
+    "tokenAddress": "USDC"
+    "chainId":1
+}
+\`\`\`
+
+User message:
+"{{currentMessage}}"
+
+Given the message, extract the following information about the requested token transfer:
+- Account contract address that sendinf the token
+- Receiver wallet address
+- Transfer amount
+- The symbol of the token that wants to be transferred. If you know the address of token on that chainId then add that.
+- Chain id
+
+Respond with a JSON markdown block containing only the extracted values.`;
+
+export interface TransferContent extends Content {
+    accountAddress: string;
+    receiverAddress: string;
+    transferAmount: string | number;
+    tokenAddress?: string;
+    chainId: number;
+}
+
+const TransferSchema = z.object({
+    accountAddress: z.string().optional(),
+    receiverAddress: z.string(),
+    transferAmount: z.string(),
+    chainId: z.number(),
+    tokenAddress: z.string().optional(),
+});
+
+const validatedTransferSchema = z.object({
+    accountAddress: z
+        .string()
+        .refine(isAddress, { message: "Invalid token address" }),
+    receiverAddress: z
+        .string()
+        .refine(isAddress, { message: "Invalid recipient address" }),
+    transferAmount: z.string(),
+});
 
 export const sendAction: Action = {
     name: "SEND_TOKEN",
@@ -38,6 +95,30 @@ export const sendAction: Action = {
         // console.log("message----", message);
         console.log("state----", state);
         console.log("options----", options);
+
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
+
+        state.currentMessage = `${state.recentMessagesData[1].content.text}`;
+        const transferContext = composeContext({
+            state,
+            template: transferTemplate,
+        });
+
+        const content = (
+            await generateObject({
+                runtime,
+                context: transferContext,
+                modelClass: ModelClass.SMALL,
+                schema: TransferSchema,
+            })
+        ).object as TransferContent;
+
+        console.log("content----", content);
+
         try {
             if (!options) {
                 throw new Error("No options provided");
