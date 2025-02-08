@@ -1,6 +1,7 @@
 
 # Console Kit 🤖
 
+- branch feature/console-kit
 - node -v 23
 - pnpm install --no-frozen-lockfile (if this doesen't works (pnpm install --fix-lockfile), If it still doesen't works delete lock file and do pnpm install  and pnpm install --fix-lockfile
 - pnpm build
