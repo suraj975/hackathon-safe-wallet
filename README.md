@@ -2,7 +2,7 @@
 # Console Kit 🤖
 
 - branch feature/console-kit
-- node -v Node.js 23+
+- node -v Node.js 23+ (currently using v23.3.0)
 - pnpm install --no-frozen-lockfile (if this doesen't works (pnpm install --fix-lockfile), If it still doesen't works delete lock file and do pnpm install  and pnpm install --fix-lockfile
 - pnpm build
 - pnpm start
