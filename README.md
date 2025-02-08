@@ -7,6 +7,7 @@
 - pnpm build
 - pnpm start
 - pnpm start:client (on separate terminal)
+- add env ( CONSOLE_KIT_API_KEY, CONSOLE_KIT_BASE_URL)
 
 
 
