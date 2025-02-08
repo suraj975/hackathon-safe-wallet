@@ -15,6 +15,48 @@ import { ConsoleKitService } from "../services/console";
 import { z } from "zod";
 import { isAddress } from "viem";
 
+import fetch from "node-fetch";
+
+async function getTokenAddress(tokenSymbol: string, chain: string | number) {
+    const chainMap = {
+        ethereum: "ethereum",
+        bsc: "binance-smart-chain",
+        polygon: "polygon-pos",
+        solana: "solana",
+        avalanche: "avalanche",
+        arbitrum: "arbitrum-one",
+        optimism: "optimistic-ethereum",
+        fantom: "fantom",
+    };
+
+    const chainMapID = {
+        1: "ethereum",
+    };
+
+    const apiUrl = `https://api.coingecko.com/api/v3/coins/list`;
+    const response = await fetch(apiUrl);
+    const tokens = await response.json();
+
+    const token = tokens.find(
+        (t: any) => t.symbol.toLowerCase() === tokenSymbol.toLowerCase()
+    );
+    if (!token) {
+        console.log("Token not found.");
+        return null;
+    }
+
+    const tokenDetailsUrl = `https://api.coingecko.com/api/v3/coins/${token.id}`;
+    const detailsResponse = await fetch(tokenDetailsUrl);
+    const details = await detailsResponse.json();
+    const isChainId =
+        typeof chain === "number" ? true : Number(chain) ? true : false;
+    return (
+        details.platforms[
+            isChainId ? chainMapID[Number(chain)] : chainMap[Number(chain)]
+        ] || "Address not available for this chain."
+    );
+}
+
 const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
 Example response:
@@ -35,7 +77,7 @@ Given the message, extract the following information about the requested token t
 - Account contract address that sendinf the token
 - Receiver wallet address
 - Transfer amount
-- The symbol of the token that wants to be transferred. If you know the address of token on that chainId then add that.
+- The symbol of the token that wants to be transferred.
 - Chain id
 
 Respond with a JSON markdown block containing only the extracted values.`;
@@ -112,7 +154,7 @@ export const sendAction: Action = {
             await generateObject({
                 runtime,
                 context: transferContext,
-                modelClass: ModelClass.SMALL,
+                modelClass: ModelClass.LARGE,
                 schema: TransferSchema,
             })
         ).object as TransferContent;
