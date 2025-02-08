@@ -155,9 +155,10 @@ import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
-
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
+import consoleKitPlugin from "@elizaos/plugin-console-kit";
+import { ethHelperCharacter } from "./etherHelper.character.ts";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -1288,6 +1289,12 @@ export async function createAgent(
                 : null,
             getSecret(character, "GELATO_RELAY_API_KEY") ? gelatoPlugin : null,
             getSecret(character, "TRIKON_WALLET_ADDRESS") ? trikonPlugin : null,
+            getSecret(character, "CONSOLE_KIT_API_KEY")
+                ? consoleKitPlugin
+                : null,
+            getSecret(character, "CONSOLE_KIT_BASE_URL")
+                ? consoleKitPlugin
+                : null,
             getSecret(character, "ARBITRAGE_EVM_PRIVATE_KEY") &&
             (getSecret(character, "ARBITRAGE_EVM_PROVIDER_URL") ||
                 getSecret(character, "ARBITRAGE_ETHEREUM_WS_URL")) &&

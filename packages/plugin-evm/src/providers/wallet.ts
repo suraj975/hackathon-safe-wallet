@@ -316,7 +316,7 @@ export const initWalletProvider = async (runtime: IAgentRuntime) => {
         );
     } else {
         const privateKey = runtime.getSetting(
-            "EVM_PRIVATE_KEY"
+            "EVM_PRIVATE_KEY_TEST"
         ) as `0x${string}`;
         if (!privateKey) {
             throw new Error("EVM_PRIVATE_KEY is missing");
@@ -334,8 +334,11 @@ export const evmWalletProvider: Provider = {
         try {
             const walletProvider = await initWalletProvider(runtime);
             const address = walletProvider.getAddress();
+            console.error("address:", address);
             const balance = await walletProvider.getWalletBalance();
+            console.error("balance:", balance);
             const chain = walletProvider.getCurrentChain();
+            console.error("chain:", chain);
             const agentName = state?.agentName || "The agent";
             return `${agentName}'s EVM Wallet Address: ${address}\nBalance: ${balance} ${chain.nativeCurrency.symbol}\nChain ID: ${chain.id}, Name: ${chain.name}`;
         } catch (error) {
