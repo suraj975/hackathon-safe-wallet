@@ -1,3 +1,17 @@
+
+# Console Kit 🤖
+
+- node -v 23
+- pnpm install --no-frozen-lockfile (if this doesen't works (pnpm install --fix-lockfile), If it still doesen't works delete lock file and do pnpm install  and pnpm install --fix-lockfile
+- pnpm build
+- pnpm start
+- pnpm start:client (on separate terminal)
+
+
+
+
+
+
 # Eliza 🤖
 
 <div align="center">
