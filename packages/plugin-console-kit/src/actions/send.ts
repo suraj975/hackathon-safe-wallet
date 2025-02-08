@@ -35,6 +35,9 @@ export const sendAction: Action = {
         options: Record<string, unknown> | undefined,
         callback: HandlerCallback
     ) => {
+        // console.log("message----", message);
+        console.log("state----", state);
+        console.log("options----", options);
         try {
             if (!options) {
                 throw new Error("No options provided");
