@@ -190,3 +190,12 @@ We now have a [paper](https://arxiv.org/pdf/2501.06781) you can cite for the Eli
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=elizaos/eliza&type=Date)](https://star-history.com/#elizaos/eliza&Date)
+
+
+branch feature/console-kit
+node -v Node.js 23+ (currently using v23.3.0)
+pnpm install --no-frozen-lockfile (if this doesen't works (pnpm install --fix-lockfile), If it still doesen't works delete lock file and do pnpm install and pnpm install --fix-lockfile
+pnpm build
+pnpm start
+pnpm start:client (on separate terminal)
+add env ( CONSOLE_KIT_API_KEY, CONSOLE_KIT_BASE_URL)

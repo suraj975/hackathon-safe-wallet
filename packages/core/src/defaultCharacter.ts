@@ -1,8 +1,8 @@
 import { Character, ModelProviderName } from "./types.ts";
 
 export const defaultCharacter: Character = {
-    name: "Eliza",
-    username: "eliza",
+    "name": "ConsoleKit Agent",
+    username: "ConsoleKitAgent",
     plugins: [],
     clients: [],
     modelProvider: ModelProviderName.LLAMALOCAL,
