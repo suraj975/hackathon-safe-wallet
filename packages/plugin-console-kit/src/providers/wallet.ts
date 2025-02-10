@@ -316,10 +316,10 @@ export const initWalletProvider = async (runtime: IAgentRuntime) => {
         );
     } else {
         const privateKey = runtime.getSetting(
-            "EVM_PRIVATE_KEY"
+            "EVM_PRIVATE_KEY_TEST"
         ) as `0x${string}`;
         if (!privateKey) {
-            throw new Error("EVM_PRIVATE_KEY is missing");
+            throw new Error("EVM_PRIVATE_KEY_TEST is missing");
         }
         return new WalletProvider(privateKey, runtime.cacheManager, chains);
     }

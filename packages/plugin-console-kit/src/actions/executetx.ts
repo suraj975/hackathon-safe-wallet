@@ -13,7 +13,7 @@ import {
 } from "@elizaos/core";
 import { ConsoleKitService } from "../services/console";
 import { z } from "zod";
-import { Account, Hex, isAddress } from "viem";
+import { isAddress } from "viem";
 import { initWalletProvider, type WalletProvider } from "../providers/wallet";
 
 import fetch from "node-fetch";
@@ -58,15 +58,13 @@ async function getTokenAddress(tokenSymbol: string, chain: string | number) {
     );
 }
 
-const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+const executeTxTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
 Example response:
 \`\`\`json
 {
-    "accountAddress": "<TOKEN_ADDRESS>",
-    "receiverAddress": "<TOKEN_ADDRESS>",
-    "transferAmount": "1000",
-    "tokenAddress": "USDC"
+    "transactionHash": "<TRANSACTION_HASH>",
+    "url": "https://<BLOCKEXPLORER_LINK>/tx/<TRANSACTION_HASH>",
     "chainId":1
 }
 \`\`\`
@@ -74,12 +72,10 @@ Example response:
 User message:
 "{{currentMessage}}"
 
-Given the message, extract the following information about the requested token transfer:
-- Account contract address that sendinf the token
-- Receiver wallet address
-- Transfer amount
-- The symbol of the token that wants to be transferred.
-- Chain id
+Given the message, extract the following information about the transaction:
+- Transaction hash
+- Chain Id
+- Block explorer link to view the transaction the block explorer based on chaind Id
 
 Respond with a JSON markdown block containing only the extracted values.`;
 
@@ -109,35 +105,18 @@ const validatedTransferSchema = z.object({
     transferAmount: z.string(),
 });
 
-export const sendAction: Action = {
-    name: "SEND_TOKEN",
-    description: "Send tokens to an address",
+export const executeTxAction: Action = {
+    name: "EXECUTE_TX",
+    description: "Execute a transaction via an eoa",
     similes: [
-        "transfer token",
-        "send tokens",
-        "transfer to address",
-        "send to wallet",
-        "send crypto",
-        "transfer cryptocurrency",
+        "execute transaction",
+        "send transaction",
+        "initiate transaction",
+        "send transaction via eoa",
     ],
     suppressInitialMessage: true,
     validate: async (runtime: IAgentRuntime) => {
-        console.log(
-            "runtime.getSetting('CONSOLE_KIT_API_KEY')---",
-            runtime.getSetting("CONSOLE_KIT_API_KEY")
-        );
-        const hasApiKey = !!runtime.getSetting("CONSOLE_KIT_API_KEY");
-        
-        const hasPrivateKey = !!runtime.getSetting("EVM_PRIVATE_KEY");
-       
-        if (!hasApiKey) {
-            throw new Error("CONSOLE_KIT_API_KEY is missing");
-        }
-        if (!hasPrivateKey) {
-            throw new Error("EVM_PRIVATE_KEY is missing");
-        }
-        
-        return hasApiKey && hasPrivateKey;
+        return !!runtime.getSetting("CONSOLE_KIT_API_KEY");
     },
     handler: (async (
         runtime: IAgentRuntime,
@@ -146,8 +125,8 @@ export const sendAction: Action = {
         options: Record<string, unknown> | undefined,
         callback: HandlerCallback
     ) => {
-        // console.log("message----", message);
-        console.log("state----", state);
+        console.log("message----", message);
+        
         console.log("options----", options);
 
         if (!state) {
@@ -157,10 +136,12 @@ export const sendAction: Action = {
         }
 
         state.currentMessage = `${state.recentMessagesData[1].content.text}`;
-        const transferContext = composeContext({
-            state,
-            template: transferTemplate,
-        });
+        console.log('state...',JSON.stringify(state));
+        
+        // const transferContext = composeContext({
+        //     state,
+        //     template: executeTxTemplate,
+        // });
 
         // const content = (
         //     await generateObject({
@@ -178,75 +159,30 @@ export const sendAction: Action = {
                 throw new Error("No options provided");
             }
 
-            const params = {
-                chainId: 1,
-                receiverAddress: options.receiverAddress as string,
-                transferAmount: options.transferAmount as string,
-                accountAddress: options.accountAddress as string,
-                tokenAddress: options.tokenAddress as string,
-            };
+            // const params = {
+            //     chainId: options.chainId as number,
+            //     receiverAddress: options.receiverAddress as string,
+            //     transferAmount: options.transferAmount as string,
+            //     accountAddress: options.accountAddress as string,
+            //     tokenAddress: options.tokenAddress as string,
+            // };
 
-            const service = runtime.services.get(ConsoleKitService.serviceType);
-            if (!(service instanceof ConsoleKitService)) {
-                throw new Error("ConsoleKit service not found or invalid");
-            }
+            // const service = runtime.services.get(ConsoleKitService.serviceType);
+            // if (!(service instanceof ConsoleKitService)) {
+            //     throw new Error("ConsoleKit service not found or invalid");
+            // }
 
-            const result = await service.send(params);
+            // const result = await service.send(params);
 
-
-            const chainName = 'mainnet';
-            const walletProvider = await initWalletProvider(runtime);
-            walletProvider.switchChain(chainName);
-
-            const existingChain = walletProvider.chains[chainName];
-        const walletClient = walletProvider.getWalletClient(
-            chainName
-        );
-
-     
-            const txResults = await Promise.all(result.data.transactions.map(async tx=> {
-                try {
-               const hash =  await walletClient.sendTransaction({
-                    account: walletClient.account as Account,
-                    to: tx.to,
-                    value: BigInt(tx.value),
-                    data: tx.data as Hex,
-                    chain:existingChain
-                });
-    
-                return {
-                    hash,
-                    from: walletClient.account,
-                    to: tx.to,
-                    value: tx.value,
-                    data: tx.data as Hex,
-                };
-            } catch (error) {
-                throw new Error(`Transfer failed: ${error.message}`);
-            }
-            
-            }));
-            
-      
-
-            console.log("result----", JSON.stringify(result));
+            // console.log("result----", JSON.stringify(result));
             callback({
-                text: `✅ Transaction prepared successfully!\nTransactions to execute:\n${JSON.stringify(
-                    result.data.transactions,
-                    null,
-                    2
-                )}\nTransactions executed:\n${JSON.stringify(
-                    txResults,
-                    null,
-                    2
-                )}`,
-                content: { transactions: result.data.transactions },
+                text: `✅ Transaction executed successfully!`,
+                // content: { transactions: result.data.transactions },
             });
             return true;
         } catch (error: unknown) {
             const errorMessage =
                 error instanceof Error ? error.message : String(error);
-                console.log("Send token failed:", errorMessage)
             elizaLogger.error("Send token failed:", errorMessage);
             callback({
                 text: `❌ Failed to send tokens: ${errorMessage}`,
